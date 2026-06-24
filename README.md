@@ -55,6 +55,15 @@ messing with their own radio space**.
 - **📈 Beautiful live UI** — a clean signal meter for each band, an active-head
   indicator, peak-hold, live burst rate, uptime, and a flashing alert banner
   that names the threat and the band.
+- **🩻 Scope view** — flip to a scrolling oscilloscope (◄/►) that graphs a band's
+  RSSI over time against its live **noise-floor** and **detection-threshold**
+  lines, so you can *watch* an attack build. Pick the band with ▲/▼.
+- **📊 Stats dashboard** — totals, per-threat (jam/flood/replay) and per-band
+  breakdowns, live noise floors and uptime, with a one-press reset.
+- **🗒️ SD card logging** — optionally append every alert to `alerts.csv` for a
+  forensic record you can pull off the card later.
+- **🔕 Arm / Silent** — long-press OK to mute the alarms while it keeps detecting
+  and logging; **keep-screen-on** mode turns it into a true desk sentry.
 - **🧠 Self-calibrating** — an adaptive per-band noise floor means it just works
   in any RF environment. Press **OK** to recalibrate after you move it.
 - **🔔 Multi-channel alerts** — LED, vibration and a custom alert tone, each
@@ -70,12 +79,15 @@ messing with their own radio space**.
 
 | Key | On menus | On the **Watch** screen |
 | --- | --- | --- |
-| **▲ / ▼** | Move selection / scroll | — |
+| **▲ / ▼** | Move selection / scroll | **Scope:** pick the graphed band |
+| **◄ / ►** | Adjust value | Toggle **Meters ↔ Scope** |
 | **OK** | Open item | **Recalibrate** the noise floor |
+| **Hold OK** | — | **Arm ↔ Silent** (mute the alarms) |
 | **← Back** | Previous screen | Stop watching / back to menu |
 
 When you leave the Watch screen the radio is released; open **Watch** again to
-resume guarding.
+resume guarding. In **Stats**, press the **Reset** button to clear the counters,
+the alert log and `alerts.csv`.
 
 ---
 
@@ -91,6 +103,8 @@ resume guarding.
 | **Alert Sound** | On / Off | On | Play the alert tone. |
 | **Alert Vibro** | On / Off | On | Buzz on alert. |
 | **Alert LED** | On / Off | On | Flash the red LED on alert. |
+| **Log to SD** | On / Off | Off | Append every alert to `alerts.csv` on the SD card. |
+| **Keep Screen On** | On / Off | On | Hold the backlight on while the Watch screen is open. |
 
 ---
 
@@ -196,12 +210,13 @@ flipper-cerberus/
 ├── cerberus_i.h               # shared app state
 ├── scenes/                    # screen flow (scene manager)
 │   ├── cerberus_scene_start.c     #   main menu
-│   ├── cerberus_scene_monitor.c   #   the Watch screen
+│   ├── cerberus_scene_monitor.c   #   the Watch screen (meters + scope)
+│   ├── cerberus_scene_stats.c     #   stats dashboard + reset
 │   ├── cerberus_scene_alerts.c    #   alert log
 │   ├── cerberus_scene_settings.c  #   settings
 │   └── cerberus_scene_about.c     #   about / ethics
 ├── views/
-│   └── cerberus_monitor_view.c    # the live meter UI (canvas drawing)
+│   └── cerberus_monitor_view.c    # the live meter + scope UI (canvas drawing)
 ├── helpers/
 │   ├── cerberus_subghz.c          # CC1101 RSSI worker thread + band hopping
 │   └── cerberus_detector.c        # jam / flood / replay detection engine
@@ -214,9 +229,11 @@ flipper-cerberus/
 
 ## 🗺️ Roadmap
 
-- [ ] Scrolling **waterfall / spectrogram** view
+- [x] Scrolling **Scope** view — per-band RSSI vs. floor/threshold — *v1.1*
+- [x] **CSV logging** of alerts to the SD card — *v1.1*
+- [x] **Stats dashboard**, arm/silent mute, keep-screen-on — *v1.1*
+- [ ] Full **waterfall / spectrogram** (per-frequency-bin) view
 - [ ] Per-band, user-adjustable thresholds
-- [ ] **CSV logging** of alerts to the SD card
 - [ ] Optional **protocol decoder** path for confirmed rolling-code replay
 - [ ] User-defined band list (beyond the default three)
 - [ ] External CC1101 module support

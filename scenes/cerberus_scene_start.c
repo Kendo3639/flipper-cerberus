@@ -2,6 +2,7 @@
 
 typedef enum {
     StartItemMonitor,
+    StartItemStats,
     StartItemAlerts,
     StartItemSettings,
     StartItemAbout,
@@ -20,6 +21,8 @@ void cerberus_scene_start_on_enter(void* context) {
     submenu_set_header(submenu, "C E R B E R U S");
     submenu_add_item(
         submenu, "Watch", StartItemMonitor, cerberus_scene_start_submenu_callback, app);
+    submenu_add_item(
+        submenu, "Stats", StartItemStats, cerberus_scene_start_submenu_callback, app);
     submenu_add_item(
         submenu, "Alert Log", StartItemAlerts, cerberus_scene_start_submenu_callback, app);
     submenu_add_item(
@@ -42,6 +45,9 @@ bool cerberus_scene_start_on_event(void* context, SceneManagerEvent event) {
         switch(event.event) {
         case StartItemMonitor:
             scene_manager_next_scene(app->scene_manager, CerberusSceneMonitor);
+            break;
+        case StartItemStats:
+            scene_manager_next_scene(app->scene_manager, CerberusSceneStats);
             break;
         case StartItemAlerts:
             scene_manager_next_scene(app->scene_manager, CerberusSceneAlerts);

@@ -9,7 +9,8 @@
 
 #define CERBERUS_CONFIG_PATH    APP_DATA_PATH("cerberus.conf")
 #define CERBERUS_CONFIG_MAGIC   0xC5
-#define CERBERUS_CONFIG_VERSION 1
+#define CERBERUS_CONFIG_VERSION 2
+#define CERBERUS_CSV_PATH       APP_DATA_PATH("alerts.csv")
 
 // --- Custom alert feedback sequences ---------------------------------------
 
@@ -49,6 +50,8 @@ static void cerberus_config_default(CerberusConfig* c) {
     c->notify_sound = true;
     c->notify_vibro = true;
     c->notify_led = true;
+    c->log_csv = false; // opt-in: writes to the SD card
+    c->keep_screen_on = true; // it's a desk monitor - keep it lit while watching
 }
 
 static void cerberus_config_load(CerberusConfig* c) {
@@ -87,6 +90,48 @@ void cerberus_apply_config(Cerberus* app) {
     cerberus_subghz_set_config(app->worker, &wc);
 }
 
+// --- CSV logging to the SD card --------------------------------------------
+
+static void cerberus_csv_append(const CerberusAlertRecord* r) {
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    storage_common_mkdir(storage, APP_DATA_PATH(""));
+
+    File* file = storage_file_alloc(storage);
+    if(storage_file_open(file, CERBERUS_CSV_PATH, FSAM_WRITE, FSOM_OPEN_APPEND)) {
+        FuriString* line = furi_string_alloc();
+        if(storage_file_size(file) == 0) {
+            furi_string_set(line, "uptime_s,threat,mhz,rssi_dbm\n");
+            storage_file_write(file, furi_string_get_cstr(line), furi_string_size(line));
+        }
+        furi_string_printf(
+            line,
+            "%lu,%s,%u,%d\n",
+            (unsigned long)r->timestamp_s,
+            cerberus_threat_name(r->threat),
+            (unsigned)r->freq_mhz,
+            (int)r->rssi);
+        storage_file_write(file, furi_string_get_cstr(line), furi_string_size(line));
+        furi_string_free(line);
+    }
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+}
+
+void cerberus_reset_stats(Cerberus* app) {
+    furi_mutex_acquire(app->log_mutex, FuriWaitForever);
+    app->log_count = 0;
+    app->log_head = 0;
+    app->alert_total = 0;
+    memset(app->count_threat, 0, sizeof(app->count_threat));
+    memset(app->count_band, 0, sizeof(app->count_band));
+    furi_mutex_release(app->log_mutex);
+
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    storage_common_remove(storage, CERBERUS_CSV_PATH);
+    furi_record_close(RECORD_STORAGE);
+}
+
 // --- Alert handling (runs on the GUI thread, regardless of active scene) ----
 
 static void cerberus_handle_alert(Cerberus* app, uint32_t event) {
@@ -97,6 +142,7 @@ static void cerberus_handle_alert(Cerberus* app, uint32_t event) {
     CerberusSnapshot snap;
     cerberus_subghz_get_snapshot(app->worker, &snap);
 
+    CerberusAlertRecord record;
     furi_mutex_acquire(app->log_mutex, FuriWaitForever);
     CerberusAlertRecord* r = &app->log[app->log_head];
     r->timestamp_s = (furi_get_tick() - app->start_tick) / 1000;
@@ -104,17 +150,26 @@ static void cerberus_handle_alert(Cerberus* app, uint32_t event) {
     r->band_index = band;
     r->freq_mhz = cerberus_bands[band].mhz;
     r->rssi = snap.band[band].rssi;
+    record = *r; // copy for CSV outside the lock
     app->log_head = (uint8_t)((app->log_head + 1) % CERBERUS_LOG_MAX);
     if(app->log_count < CERBERUS_LOG_MAX) app->log_count++;
     app->alert_total++;
+    if(threat < 4) app->count_threat[threat]++;
+    app->count_band[band]++;
     furi_mutex_release(app->log_mutex);
 
-    notification_message(app->notifications, &sequence_display_backlight_on);
-    if(app->config.notify_led) notification_message(app->notifications, &sequence_cerberus_led);
-    if(app->config.notify_vibro)
-        notification_message(app->notifications, &sequence_cerberus_vibro);
-    if(app->config.notify_sound)
-        notification_message(app->notifications, &sequence_cerberus_alert_tone);
+    // CSV + counters happen whether armed or silent; only the *alarms* are gated.
+    if(app->config.log_csv) cerberus_csv_append(&record);
+
+    if(app->armed) {
+        notification_message(app->notifications, &sequence_display_backlight_on);
+        if(app->config.notify_led)
+            notification_message(app->notifications, &sequence_cerberus_led);
+        if(app->config.notify_vibro)
+            notification_message(app->notifications, &sequence_cerberus_vibro);
+        if(app->config.notify_sound)
+            notification_message(app->notifications, &sequence_cerberus_alert_tone);
+    }
 }
 
 // --- ViewDispatcher callbacks ----------------------------------------------
@@ -183,6 +238,9 @@ static Cerberus* cerberus_app_alloc(void) {
     app->log_count = 0;
     app->log_head = 0;
     app->alert_total = 0;
+    app->armed = true;
+    memset(app->count_threat, 0, sizeof(app->count_threat));
+    memset(app->count_band, 0, sizeof(app->count_band));
     app->start_tick = furi_get_tick();
 
     for(uint8_t i = 0; i < CerberusSettingCount; i++) {

@@ -23,7 +23,7 @@
 #include "helpers/cerberus_subghz.h"
 #include "helpers/cerberus_detector.h"
 
-#define CERBERUS_VERSION  "1.0"
+#define CERBERUS_VERSION  "1.1"
 #define CERBERUS_GITHUB   "github.com/at0m-b0mb/flipper-cerberus"
 #define CERBERUS_LOG_MAX  32
 
@@ -38,6 +38,8 @@ typedef enum {
     CerberusSettingNotifySound,
     CerberusSettingNotifyVibro,
     CerberusSettingNotifyLed,
+    CerberusSettingLogCsv,
+    CerberusSettingKeepScreen,
     CerberusSettingCount,
 } CerberusSettingField;
 
@@ -51,6 +53,8 @@ typedef struct {
     bool notify_sound;
     bool notify_vibro;
     bool notify_led;
+    bool log_csv; // append alerts to a CSV on the SD card
+    bool keep_screen_on; // hold the backlight on while watching
 } CerberusConfig;
 
 // One logged alert.
@@ -101,13 +105,20 @@ struct Cerberus {
     CerberusConfig config;
     CerberusSettingCtx setting_ctx[CerberusSettingCount];
 
+    bool armed; // false = silent (still detects + logs, no LED/buzz/tone)
+
     FuriMutex* log_mutex;
     CerberusAlertRecord log[CERBERUS_LOG_MAX];
     uint8_t log_count; // valid entries (capped at CERBERUS_LOG_MAX)
     uint8_t log_head; // next write slot (ring buffer)
     uint32_t alert_total; // lifetime alert counter
+    uint32_t count_threat[4]; // alerts per CerberusThreat
+    uint32_t count_band[CERBERUS_BAND_COUNT]; // alerts per band
     uint32_t start_tick; // app launch tick, for timestamps
 };
+
+/** Reset the alert log, counters and the on-SD CSV (used by the Stats screen). */
+void cerberus_reset_stats(Cerberus* app);
 
 /** Build the worker-facing config slice from the full user config. */
 void cerberus_apply_config(Cerberus* app);

@@ -51,6 +51,7 @@ typedef struct {
     int16_t rssi; // last measured RSSI (dBm)
     int16_t floor; // learned noise floor (dBm)
     int16_t peak; // peak hold (dBm)
+    int16_t threshold; // current "busy" line = floor + margin (dBm)
     uint16_t bursts; // bursts in the last second
     CerberusThreat threat; // currently displayed threat
 } CerberusBandStatus;

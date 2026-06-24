@@ -42,6 +42,14 @@ static void cerberus_settings_changed(VariableItem* item) {
         app->config.notify_led = idx;
         variable_item_set_current_value_text(item, onoff_text[idx]);
         break;
+    case CerberusSettingLogCsv:
+        app->config.log_csv = idx;
+        variable_item_set_current_value_text(item, onoff_text[idx]);
+        break;
+    case CerberusSettingKeepScreen:
+        app->config.keep_screen_on = idx;
+        variable_item_set_current_value_text(item, onoff_text[idx]);
+        break;
     default:
         break;
     }
@@ -91,6 +99,10 @@ void cerberus_scene_settings_on_enter(void* context) {
         app, CerberusSettingNotifyVibro, "Alert Vibro", 2, app->config.notify_vibro, onoff_text);
     cerberus_add_choice(
         app, CerberusSettingNotifyLed, "Alert LED", 2, app->config.notify_led, onoff_text);
+    cerberus_add_choice(
+        app, CerberusSettingLogCsv, "Log to SD", 2, app->config.log_csv, onoff_text);
+    cerberus_add_choice(
+        app, CerberusSettingKeepScreen, "Keep Screen On", 2, app->config.keep_screen_on, onoff_text);
 
     variable_item_list_set_selected_item(
         list, scene_manager_get_scene_state(app->scene_manager, CerberusSceneSettings));

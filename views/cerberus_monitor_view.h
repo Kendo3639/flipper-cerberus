@@ -17,7 +17,8 @@ extern "C" {
 typedef struct CerberusMonitorView CerberusMonitorView;
 
 typedef enum {
-    CerberusMonitorEventResetFloor, // user asked to recalibrate (OK)
+    CerberusMonitorEventResetFloor, // user asked to recalibrate (short OK)
+    CerberusMonitorEventToggleArm, // user toggled arm/silent (long OK)
 } CerberusMonitorEvent;
 
 typedef void (*CerberusMonitorCallback)(CerberusMonitorEvent event, void* context);
@@ -33,6 +34,12 @@ void cerberus_monitor_view_set_callback(
 
 /** Push a fresh radio snapshot in for drawing. */
 void cerberus_monitor_view_update(CerberusMonitorView* view, const CerberusSnapshot* snap);
+
+/** Update the title-bar status (armed/silent + lifetime alert count). */
+void cerberus_monitor_view_set_status(
+    CerberusMonitorView* view,
+    bool armed,
+    uint32_t alert_total);
 
 #ifdef __cplusplus
 }

@@ -106,6 +106,8 @@ static int32_t cerberus_subghz_thread(void* context) {
         for(size_t i = 0; i < CERBERUS_BAND_COUNT; i++) {
             worker->snapshot.band[i].floor = (int16_t)worker->det[i].floor;
             worker->snapshot.band[i].peak = (int16_t)worker->det[i].peak;
+            worker->snapshot.band[i].threshold =
+                (int16_t)(worker->det[i].floor + params.margin_db);
             worker->snapshot.band[i].bursts = worker->det[i].bursts_per_sec;
             worker->snapshot.band[i].threat = worker->det[i].threat;
         }
