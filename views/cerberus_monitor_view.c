@@ -181,7 +181,7 @@ static void cerberus_draw_meters(Canvas* canvas, CerberusMonitorModel* m) {
         canvas_draw_str(canvas, 2, 61, left);
 
         if(m->alert_total > 0) {
-            char mid[10];
+            char mid[16];
             snprintf(mid, sizeof(mid), "!%lu", (unsigned long)m->alert_total);
             canvas_draw_str_aligned(canvas, 64, 61, AlignCenter, AlignBottom, mid);
         }
@@ -217,7 +217,7 @@ static void cerberus_draw_scope(Canvas* canvas, CerberusMonitorModel* m) {
     const uint8_t b = m->scope_band;
     const CerberusBandStatus* st = &m->snap.band[b];
     const uint8_t gx0 = 5, gy0 = 14, gw = SCOPE_W, gh = 40;
-    const uint8_t gx1 = gx0 + gw - 1, gy1 = gy0 + gh;
+    const uint8_t gx1 = gx0 + gw - 1;
 
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontSecondary);
