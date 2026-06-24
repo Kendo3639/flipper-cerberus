@@ -1,0 +1,5 @@
+ADD_SCENE(cerberus, start, Start)
+ADD_SCENE(cerberus, monitor, Monitor)
+ADD_SCENE(cerberus, alerts, Alerts)
+ADD_SCENE(cerberus, settings, Settings)
+ADD_SCENE(cerberus, about, About)
