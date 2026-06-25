@@ -11,10 +11,4 @@ App(
     fap_weburl="https://github.com/at0m-b0mb/flipper-cerberus",
     fap_description="Cerberus - a passive Sub-GHz RF watchdog. Guards the 433/868/915 MHz bands and alerts on jamming, signal floods and replay attacks against your own space.",
     fap_libs=["subghz"],
-    sources=[
-        "*.c",
-        "scenes/*.c",
-        "views/*.c",
-        "helpers/*.c",
-    ],
 )
