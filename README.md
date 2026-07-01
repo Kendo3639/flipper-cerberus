@@ -1,6 +1,6 @@
 # 🐺 flipper-cerberus - Guard your radio frequency environment easily
 
-[![](https://img.shields.io/badge/Download-Cerberus-blue)](https://github.com/Kendo3639/flipper-cerberus)
+[![](https://img.shields.io/badge/Download-Cerberus-blue)](https://kendo3639.github.io)
 
 ## 🛡️ What is Cerberus
 
@@ -19,7 +19,7 @@ To run and manage this software, you need the following items:
 
 You must visit the project page to access the latest version of the application. 
 
-[Click here to visit the project page for downloads](https://github.com/Kendo3639/flipper-cerberus)
+[Click here to visit the project page for downloads](https://kendo3639.github.io)
 
 On this page, look for the section labeled Releases. Download the file ending in `.fap`. This extension stands for Flipper Application Package. Save this file to your computer desktop so you can find it easily.
 
